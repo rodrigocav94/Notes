@@ -51,7 +51,7 @@ class ViewController: UITableViewController {
     }
     
     func onNewNoteTapped(_ action: UIAction) {
-        let emptyView = UIViewController()
+        let emptyView = NoteController()
         navigationController?.pushViewController(emptyView, animated: true)
     }
 }

@@ -38,13 +38,23 @@ class NoteController: UIViewController {
 
         let deleteAction = UIAction(title: "Erase", image: UIImage(systemName: "trash"), attributes: .destructive, handler: onDeleteTapped)
         let newNoteAction = UIAction(title: "New Entry", image: UIImage(systemName: "square.and.pencil"), handler: onNewNoteTapped)
-        let menu = UIMenu(children: [deleteAction, newNoteAction])
+        let menu = UIMenu(children: [newNoteAction, deleteAction])
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
     }
     
     func onDeleteTapped(_ action: UIAction) {
-        
+        let ac = UIAlertController(
+            title: "Delete note?",
+            message: "This action cannot be undone",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+            self?.navigationController?.popToRootViewController(animated: true)
+            self?.textView?.text = ""
+        }))
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(ac, animated: true)
     }
     
     func onNewNoteTapped(_ action: UIAction) {

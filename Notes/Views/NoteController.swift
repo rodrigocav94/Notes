@@ -8,21 +8,43 @@
 import UIKit
 
 class NoteController: UIViewController {
+    var vm: HomeViewModel?
+    var noteIndex: Int?
+    var textView: UITextView?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.largeTitleDisplayMode = .never
+        guard let vm, let noteIndex else { return }
+        textView?.text = vm.notes[noteIndex].text
     }
     
     override func loadView() {
         let textView = UITextView()
         setupView(textView: textView)
         self.view = textView
+        self.textView = textView
     }
     
     func setupView(textView: UITextView) {
         textView.contentInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         textView.delegate = self
         textView.font = UIFont.preferredFont(forTextStyle: .body)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        guard let text = textView?.text else { return }
+        if text.isEmpty {
+            if let noteIndex {
+                vm?.notes.remove(at: noteIndex)
+            }
+        } else {
+            if let noteIndex {
+                vm?.notes[noteIndex].text = textView?.text ?? ""
+            } else {
+                vm?.notes.insert(Note(text: textView?.text ?? ""), at: 0)
+            }
+        }
     }
 }
 

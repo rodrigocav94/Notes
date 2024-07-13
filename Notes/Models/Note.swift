@@ -7,8 +7,8 @@
 
 import Foundation
 
-struct Note: Hashable {
-    let id = UUID()
+struct Note: Hashable, Codable {
+    var id = UUID()
     var text: String
     
     var firstLine: String {

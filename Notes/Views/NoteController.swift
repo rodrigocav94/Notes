@@ -17,6 +17,7 @@ class NoteController: UIViewController {
         navigationItem.largeTitleDisplayMode = .never
         guard let vm, let noteIndex else { return }
         textView?.text = vm.notes[noteIndex].text
+        updateAttributedString()
     }
     
     override func loadView() {
@@ -50,7 +51,11 @@ class NoteController: UIViewController {
 
 extension NoteController : UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
-        let text = textView.attributedText.string
+        updateAttributedString()
+    }
+    
+    func updateAttributedString() {
+        guard let text = self.textView?.text else { return }
 
         let attributedText = NSMutableAttributedString(string: text)
         attributedText.addAttributes(
@@ -61,8 +66,8 @@ extension NoteController : UITextViewDelegate {
             range: NSRange(location: 0, length: text.utf16.count)
         )
         
-        guard let range = text.range(of: "\n")?.lowerBound else { return }
-        let firstLineBreakRange = NSRange(location: 0, length: range.utf16Offset(in: text))
+        let range = text.range(of: "\n")?.lowerBound.utf16Offset(in: text) ?? text.utf16.count
+        let firstLineBreakRange = NSRange(location: 0, length: range)
         
         attributedText.addAttribute(
             .font,
@@ -70,7 +75,7 @@ extension NoteController : UITextViewDelegate {
             range: firstLineBreakRange
         )
         
-        textView.attributedText = attributedText
+        textView?.attributedText = attributedText
     }
 }
 

@@ -14,7 +14,7 @@ class NoteController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.largeTitleDisplayMode = .never
+        setupNavBar()
         guard let vm, let noteIndex else { return }
         textView?.text = vm.notes[noteIndex].text
         updateAttributedString()
@@ -31,6 +31,24 @@ class NoteController: UIViewController {
         textView.contentInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         textView.delegate = self
         textView.font = UIFont.preferredFont(forTextStyle: .body)
+    }
+    
+    func setupNavBar() {
+        navigationItem.largeTitleDisplayMode = .never
+
+        let deleteAction = UIAction(title: "Erase", image: UIImage(systemName: "trash"), attributes: .destructive, handler: onDeleteTapped)
+        let newNoteAction = UIAction(title: "New Entry", image: UIImage(systemName: "square.and.pencil"), handler: onNewNoteTapped)
+        let menu = UIMenu(children: [deleteAction, newNoteAction])
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
+    }
+    
+    func onDeleteTapped(_ action: UIAction) {
+        
+    }
+    
+    func onNewNoteTapped(_ action: UIAction) {
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {

@@ -37,8 +37,8 @@ class NoteController: UIViewController {
         navigationItem.largeTitleDisplayMode = .never
 
         let deleteAction = UIAction(title: "Erase", image: UIImage(systemName: "trash"), attributes: .destructive, handler: onDeleteTapped)
-        let newNoteAction = UIAction(title: "New Entry", image: UIImage(systemName: "square.and.pencil"), handler: onNewNoteTapped)
-        let menu = UIMenu(children: [newNoteAction, deleteAction])
+        let newEntryAction = UIAction(title: "New Entry", image: UIImage(systemName: "square.and.pencil"), handler: onNewEntryTapped)
+        let menu = UIMenu(children: [newEntryAction, deleteAction])
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
     }
@@ -57,11 +57,17 @@ class NoteController: UIViewController {
         present(ac, animated: true)
     }
     
-    func onNewNoteTapped(_ action: UIAction) {
-        
+    func onNewEntryTapped(_ action: UIAction) {
+        updateCurrentNote()
+        textView?.text = ""
+        noteIndex = nil
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        updateCurrentNote()
+    }
+    
+    func updateCurrentNote() {
         guard let text = textView?.text else { return }
         if text.isEmpty {
             if let noteIndex {

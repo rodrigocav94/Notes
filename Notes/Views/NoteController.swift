@@ -18,10 +18,26 @@ class NoteController: UIViewController {
         guard let vm, let noteIndex else { return }
         textView?.text = vm.notes[noteIndex].text
         updateAttributedString()
+        subscribeToKeyboardEvents()
+
+    }
+    
+    func subscribeToKeyboardEvents() {
+        let notificationCenter = NotificationCenter.default // Get a reference to the default notification center.
+
+        notificationCenter.addObserver(
+            self, // The object that should receive notifications (it's self)
+            selector: #selector(adjustForKeyboard), // The method that should be called
+            name: UIResponder.keyboardWillHideNotification, // The notification we want to receive
+            object: nil // The object we want to watch. Nil means "we don't care who sends the notification."
+        )
+        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     override func loadView() {
         let textView = UITextView()
+        textView.isScrollEnabled = true
+        textView.keyboardDismissMode = .interactive
         setupView(textView: textView)
         self.view = textView
         self.textView = textView
@@ -41,6 +57,8 @@ class NoteController: UIViewController {
         let menu = UIMenu(children: [newEntryAction, deleteAction])
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
+        
+        navigationController?.toolbar.isHidden = true
     }
     
     func onDeleteTapped(_ action: UIAction) {
@@ -65,6 +83,7 @@ class NoteController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         updateCurrentNote()
+        NotificationCenter.default.removeObserver(self)
     }
     
     func updateCurrentNote() {
@@ -80,6 +99,26 @@ class NoteController: UIViewController {
                 vm?.notes.insert(Note(text: textView?.text ?? ""), at: 0)
             }
         }
+    }
+    
+    @objc func adjustForKeyboard(notification: Notification) {
+        guard let keyboardValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return } // UIResponder.keyboardFrameEndUserInfoKey tells us the frame of the keyboard after it has finished animating. This will be of type NSValue, which in turn is of type CGRect. The CGRect struct holds both a CGPoint and a CGSize, so it can be used to describe a rectangle.
+        guard let textView else { return }
+        
+        let keyboardScreenEndFrame = keyboardValue.cgRectValue // pulling out the correct frame of the keyboard
+        let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window) // Converting the rectangle to our view's co-ordinates. Convert() is used to be make sure it works on landscape too.
+        
+        if notification.name == UIResponder.keyboardWillHideNotification {
+            textView.contentInset.bottom = 0
+        } else {
+            textView.contentInset.bottom = keyboardViewEndFrame.height - view.safeAreaInsets.bottom //  indent the edges of our text view so that it appears to occupy less space even though its constraints are still edge to edge in the view.
+        }
+        
+        // scroll so that the text entry cursor is visible. If the text view has shrunk this will now be off screen, so scrolling to find it again keeps the user experience intact.
+        textView.scrollIndicatorInsets = textView.contentInset // Scroll indicator insets control how big the scroll bars are relative to their view.
+        
+        let selectedRange = textView.selectedRange
+        textView.scrollRangeToVisible(selectedRange)
     }
 }
 

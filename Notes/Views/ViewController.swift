@@ -83,12 +83,18 @@ class ViewController: UITableViewController {
         vm.sortingOption = .date
         sortMenu?.subtitle = vm.sortingOption.description
         updateSortingOption()
+        vm.filterNotes(refreshingSections: true) { [weak self] in
+            self?.tableView.reloadData()
+        }
     }
     
     func onTitleOrderTapped(_ action: UIAction) {
         vm.sortingOption = .title
         sortMenu?.subtitle = vm.sortingOption.description
         updateSortingOption()
+        vm.filterNotes(refreshingSections: true) { [weak self] in
+            self?.tableView.reloadData()
+        }
     }
 
     func updateSortingOption() {

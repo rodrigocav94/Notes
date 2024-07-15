@@ -8,6 +8,6 @@
 import Foundation
 
 struct Section {
-    var name: String
+    var name: String?
     var notes: [Note]
 }

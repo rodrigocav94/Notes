@@ -59,38 +59,50 @@ class HomeViewModel {
     var searchText: String = ""
     
     func refreshSections() {
-        let sectionsDict = notes
-            .map { note in
-                switch note.date {
-                case let date where date > .today:
-                    return ("Today", [note])
-                case let date where date > .yesterday:
-                    return ("Yesterday", [note])
-                case let date where date > .sevenDaysAgo:
-                    return ("Previous 7 Days", [note])
-                case let date where date > .thirtyDaysAgo:
-                    return ("Previous 30 Days", [note])
-                case let date where date < .currentYear:
-                    let year = Calendar.current.dateComponents([.year], from: note.date).year
-                    return ("\(year ?? 0)", [note])
-                default:
-                    return (note.date.month, [note])
+        switch sortingOption {
+        case .date:
+            let sectionsDict = notes
+                .map { note in
+                    switch note.date {
+                    case let date where date > .today:
+                        return ("Today", [note])
+                    case let date where date > .yesterday:
+                        return ("Yesterday", [note])
+                    case let date where date > .sevenDaysAgo:
+                        return ("Previous 7 Days", [note])
+                    case let date where date > .thirtyDaysAgo:
+                        return ("Previous 30 Days", [note])
+                    case let date where date < .currentYear:
+                        let year = Calendar.current.dateComponents([.year], from: note.date).year
+                        return ("\(year ?? 0)", [note])
+                    default:
+                        return (note.date.month, [note])
+                    }
                 }
+            
+            let sections = Dictionary(sectionsDict, uniquingKeysWith: { $0 + $1 }).map {
+                Section(name: $0.key, notes: $0.value)
+            }.sorted {
+                guard let firstSectionFirstNote =  $0.notes.first, let secondSectionFirstNote = $1.notes.first else {
+                    return false
+                }
+                return firstSectionFirstNote.date > secondSectionFirstNote.date
             }
-        
-        let sections = Dictionary(sectionsDict, uniquingKeysWith: { $0 + $1 }).map {
-            Section(name: $0.key, notes: $0.value)
-        }.sorted {
-            guard let firstSectionFirstNote =  $0.notes.first, let secondSectionFirstNote = $1.notes.first else {
-                return false
+            
+            self.sections = sections
+        case .title:
+            let sortedNotes = notes.sorted {
+                $0.text < $1.text
             }
-            return firstSectionFirstNote.date > secondSectionFirstNote.date
+            self.sections = [Section(notes: sortedNotes)]
         }
-        
-        self.sections = sections
     }
     
-    func filterNotes(searchedText: String = String(), callback: @escaping () -> Void) {
+    func filterNotes(refreshingSections: Bool = false, searchedText: String = String(), callback: @escaping () -> Void) {
+        if refreshingSections {
+            refreshSections()
+        }
+        
         if searchedText.isEmpty {
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }

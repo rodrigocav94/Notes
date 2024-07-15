@@ -32,6 +32,8 @@ class HomeViewModel {
     }
     
     var sections = [Section]()
+    var filteredSections = [Section]()
+    var searchText: String = ""
     
     func refreshSections() {
         let dayInSeconds: Double = 86400
@@ -103,5 +105,39 @@ class HomeViewModel {
         }
         
         self.sections = sections
+    }
+    
+    func filterNotes(searchedText: String = String(), callback: @escaping () -> Void) {
+        if searchedText.isEmpty {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                filteredSections = sections
+                callback()
+            }
+            return
+        }
+        
+        DispatchQueue.global(qos: .userInteractive).async { [weak self]  in
+            guard let self else { return }
+            
+            let filteredSections = sections.compactMap { section in
+                var filteredSection = section
+                let filteredNotes = section.notes.filter { note in
+                    note.text.localizedStandardContains(searchedText)
+                }
+                filteredSection.notes = filteredNotes
+                
+                if filteredNotes.count > 0 {
+                    return filteredSection
+                } else {
+                    return nil
+                }
+            }
+
+            DispatchQueue.main.async { [weak self] in
+                self?.filteredSections = filteredSections
+                callback()
+            }
+        }
     }
 }

@@ -10,28 +10,30 @@ import UIKit
 class ViewController: UITableViewController {
     let vm = HomeViewModel()
     var notesCountBarButton: UIBarButtonItem?
+    let searchBarController = UISearchController(searchResultsController: nil)
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavBar()
         setupToolbar()
+        setSearchBarUI()
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        vm.sections.count
+        vm.filteredSections.count
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if vm.sections.count > 0 {
-            return vm.sections[section].notes.count
+        if vm.filteredSections.count > 0 {
+            return vm.filteredSections[section].notes.count
         } else {
             return 0
         }
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if vm.sections.count > 0 {
-            return vm.sections[section].name
+        if vm.filteredSections.count > 0 {
+            return vm.filteredSections[section].name
         } else {
             return nil
         }
@@ -39,8 +41,8 @@ class ViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Note", for: indexPath)
-        if vm.sections.indices.contains(indexPath.section), vm.sections[indexPath.section].notes.indices.contains(indexPath.row) {
-            let note = vm.sections[indexPath.section].notes[indexPath.row]
+        if vm.filteredSections.indices.contains(indexPath.section), vm.filteredSections[indexPath.section].notes.indices.contains(indexPath.row) {
+            let note = vm.filteredSections[indexPath.section].notes[indexPath.row]
             cell.textLabel?.text = note.firstLine
             cell.detailTextLabel?.text = note.descriptionLine
         }
@@ -91,12 +93,42 @@ class ViewController: UITableViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         vm.refreshSections()
-        tableView.reloadData()
+        filterAndReloadData()
         if let notesCountLabel = notesCountBarButton?.customView as? UILabel {
             notesCountLabel.text = "\(vm.notes.count) notes"
         }
         navigationController?.setToolbarHidden(false, animated: false)
     }
+    
+    func filterAndReloadData() {
+        vm.filterNotes(searchedText: searchBarController.searchBar.searchTextField.text ?? "") { [weak self] in
+            self?.tableView.reloadData()
+        }
+    }
+}
+
+extension ViewController: UISearchBarDelegate {
+    func setSearchBarUI() {
+        searchBarController.searchBar.delegate = self
+        searchBarController.obscuresBackgroundDuringPresentation = false
+        searchBarController.searchBar.sizeToFit()
+        navigationItem.searchController = searchBarController
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        filterAndReloadData()
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.endEditing(true)
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.endEditing(true)
+        searchBar.text = String()
+        filterAndReloadData()
+    }
+    
 }
 
 #Preview {

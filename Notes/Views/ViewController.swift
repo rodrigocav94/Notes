@@ -61,7 +61,7 @@ class ViewController: UITableViewController {
         title = "Notes"
         
         let dateEditedAction = UIAction(title: "Default (Date Edited)", handler: onSelectTapped)
-        let aToZAction = UIAction(title: "A to Z", handler: onSelectTapped)
+        let aToZAction = UIAction(title: "Title", handler: onSelectTapped)
         let sortMenu = UIMenu(title: "Sort by", subtitle: "Default (Date Edited)", image: UIImage(systemName: "arrow.up.arrow.down"), options: .singleSelection, children: [dateEditedAction, aToZAction])
         
         let selectAction = UIAction(title: "Select Notes", image: UIImage(systemName: "checkmark.circle"), handler: onSelectTapped)

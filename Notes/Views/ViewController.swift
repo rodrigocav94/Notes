@@ -9,8 +9,9 @@ import UIKit
 
 class ViewController: UITableViewController {
     let vm = HomeViewModel()
-    var notesCountBarButton: UIBarButtonItem?
+    var notesCountBarButton: UIBarButtonItem!
     let searchBarController = UISearchController(searchResultsController: nil)
+    var sortMenu: UIMenu!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -60,22 +61,46 @@ class ViewController: UITableViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         title = "Notes"
         
-        let dateEditedAction = UIAction(title: "Default (Date Edited)", handler: onSelectTapped)
-        let aToZAction = UIAction(title: "Title", handler: onSelectTapped)
-        let sortMenu = UIMenu(title: "Sort by", subtitle: "Default (Date Edited)", image: UIImage(systemName: "arrow.up.arrow.down"), options: .singleSelection, children: [dateEditedAction, aToZAction])
+        let dateEditedAction = UIAction(title: "Default (Date Edited)", handler: onDateOrderTapped)
+        let titleAction = UIAction(title: "Title", handler: onTitleOrderTapped)
+        
+        sortMenu = UIMenu(title: "Sort by", subtitle: vm.sortingOption.description, image: UIImage(systemName: "arrow.up.arrow.down"), options: .singleSelection, children: [dateEditedAction, titleAction])
+        updateSortingOption()
         
         let selectAction = UIAction(title: "Select Notes", image: UIImage(systemName: "checkmark.circle"), handler: onSelectTapped)
         let menu = UIMenu(children: [selectAction, sortMenu])
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
+        
+        updateSortingOption()
     }
     
     func onSelectTapped(_ action: UIAction) {
 
     }
     
-    func onOrderTapped(_ action: UIAction) {
-        
+    func onDateOrderTapped(_ action: UIAction) {
+        vm.sortingOption = .date
+        sortMenu?.subtitle = vm.sortingOption.description
+        updateSortingOption()
+    }
+    
+    func onTitleOrderTapped(_ action: UIAction) {
+        vm.sortingOption = .title
+        sortMenu?.subtitle = vm.sortingOption.description
+        updateSortingOption()
+    }
+
+    func updateSortingOption() {
+        sortMenu?.children.forEach { action in
+            guard let action = action as? UIAction else {
+                return
+            }
+            
+            if action.title == vm.sortingOption.description {
+                action.state = .on
+            }
+        }
     }
     
     func setupToolbar() {

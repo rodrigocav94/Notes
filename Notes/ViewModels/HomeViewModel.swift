@@ -8,6 +8,29 @@
 import Foundation
 
 class HomeViewModel {
+    var sortingOption: SortingOption = {
+        let defaults = UserDefaults.standard
+        let decoder = JSONDecoder()
+        
+        if let data = defaults.data(forKey: "SortingOption"),
+           let notes = try? decoder.decode(SortingOption.self, from: data) {
+            return notes
+        }
+        return .date
+    }() {
+        didSet {
+            saveSortingOptionToUserDefaults()
+        }
+    }
+    
+    private func saveSortingOptionToUserDefaults() {
+        let defaults = UserDefaults.standard
+        let encoder = JSONEncoder()
+        
+        guard let data = try? encoder.encode(sortingOption) else { return }
+        defaults.setValue(data, forKey: "SortingOption")
+    }
+    
     var notes: [Note] = {
         let defaults = UserDefaults.standard
         let decoder = JSONDecoder()
@@ -19,11 +42,11 @@ class HomeViewModel {
         return []
     }() {
         didSet {
-            saveToUserDefaults()
+            saveNotesToUserDefaults()
         }
     }
     
-    private func saveToUserDefaults() {
+    private func saveNotesToUserDefaults() {
         let defaults = UserDefaults.standard
         let encoder = JSONEncoder()
         

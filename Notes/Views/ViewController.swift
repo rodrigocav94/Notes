@@ -60,7 +60,22 @@ class ViewController: UITableViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         title = "Notes"
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), style: .plain, target: self, action: #selector(onMoreTapped))
+        let dateEditedAction = UIAction(title: "Default (Date Edited)", handler: onSelectTapped)
+        let aToZAction = UIAction(title: "A to Z", handler: onSelectTapped)
+        let sortMenu = UIMenu(title: "Sort by", subtitle: "Default (Date Edited)", image: UIImage(systemName: "arrow.up.arrow.down"), options: .singleSelection, children: [dateEditedAction, aToZAction])
+        
+        let selectAction = UIAction(title: "Select Notes", image: UIImage(systemName: "checkmark.circle"), handler: onSelectTapped)
+        let menu = UIMenu(children: [selectAction, sortMenu])
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
+    }
+    
+    func onSelectTapped(_ action: UIAction) {
+
+    }
+    
+    func onOrderTapped(_ action: UIAction) {
+        
     }
     
     func setupToolbar() {
@@ -79,10 +94,6 @@ class ViewController: UITableViewController {
             UIBarButtonItem(systemItem: .compose, primaryAction: UIAction(handler: onNewNoteTapped)),
         ]
         navigationController?.setToolbarHidden(false, animated: false)
-    }
-    
-    @objc func onMoreTapped() {
-        
     }
     
     func onNewNoteTapped(_ action: UIAction) {

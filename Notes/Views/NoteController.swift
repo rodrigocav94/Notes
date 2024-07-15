@@ -9,14 +9,20 @@ import UIKit
 
 class NoteController: UIViewController {
     var vm: HomeViewModel?
-    var noteIndex: Int?
+    var noteIndex: IndexPath?
+    var selectedNote: Note? {
+        if let noteIndex {
+            return vm?.sections[noteIndex.section].notes[noteIndex.row]
+        }
+        return nil
+    }
     var textView: UITextView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavBar()
         guard let vm, let noteIndex else { return }
-        textView?.text = vm.notes[noteIndex].text
+        textView?.text = vm.sections[noteIndex.section].notes[noteIndex.row].text
         updateAttributedString()
         subscribeToKeyboardEvents()
 
@@ -58,7 +64,7 @@ class NoteController: UIViewController {
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
         
-        navigationController?.toolbar.isHidden = true
+        navigationController?.setToolbarHidden(true, animated: false)
     }
     
     func onDeleteTapped(_ action: UIAction) {
@@ -89,12 +95,18 @@ class NoteController: UIViewController {
     func updateCurrentNote() {
         guard let text = textView?.text else { return }
         if text.isEmpty {
-            if let noteIndex {
-                vm?.notes.remove(at: noteIndex)
-            }
+            vm?.notes.removeAll(where: {
+                $0.id == selectedNote?.id
+            })
         } else {
-            if let noteIndex {
-                vm?.notes[noteIndex].text = textView?.text ?? ""
+            if let selectedNote {
+                let savedText = selectedNote.text
+                let updatedText = textView?.text ?? ""
+                
+                if let noteIndex = vm?.notes.firstIndex(of: selectedNote), savedText != updatedText {
+                    vm?.notes[noteIndex].text = updatedText
+                    vm?.notes[noteIndex].date = Date()
+                }
             } else {
                 vm?.notes.insert(Note(text: textView?.text ?? ""), at: 0)
             }

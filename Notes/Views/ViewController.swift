@@ -17,13 +17,29 @@ class ViewController: UITableViewController {
         setupToolbar()
     }
     
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        vm.sections.count
+    }
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        vm.notes.count
+        if vm.sections.count > 0 {
+            return vm.sections[section].notes.count
+        } else {
+            return 0
+        }
+    }
+    
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if vm.sections.count > 0 {
+            return vm.sections[section].name
+        } else {
+            return nil
+        }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Note", for: indexPath)
-        let note = vm.notes[indexPath.row]
+        let note = vm.sections[indexPath.section].notes[indexPath.row]
         cell.textLabel?.text = note.firstLine
         cell.detailTextLabel?.text = note.descriptionLine
         return cell
@@ -32,7 +48,7 @@ class ViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let noteEditionView = NoteController()
         noteEditionView.vm = vm
-        noteEditionView.noteIndex = indexPath.row
+        noteEditionView.noteIndex = indexPath
         navigationController?.pushViewController(noteEditionView, animated: true)
     }
     
@@ -76,6 +92,7 @@ class ViewController: UITableViewController {
         if let notesCountLabel = notesCountBarButton?.customView as? UILabel {
             notesCountLabel.text = "\(vm.notes.count) notes"
         }
+        navigationController?.setToolbarHidden(false, animated: false)
     }
 }
 

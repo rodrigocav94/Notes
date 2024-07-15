@@ -9,6 +9,7 @@ import Foundation
 
 struct Note: Hashable, Codable {
     var id = UUID()
+    var date = Date()
     var text: String
     
     var firstLine: String {

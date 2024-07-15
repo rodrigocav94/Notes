@@ -36,58 +36,18 @@ class HomeViewModel {
     var searchText: String = ""
     
     func refreshSections() {
-        let dayInSeconds: Double = 86400
-        
-        guard let currentYear = {
-            var components = Calendar.current.dateComponents([.year], from: Date())
-            components.day = 1
-            components.month = 1
-            return Calendar.current.date(from: components)
-        }() else { return }
-        
-        guard let today = {
-            var components = Calendar.current.dateComponents([.day, .month, .year], from: Date())
-            components.hour = 0
-            components.minute = 0
-            return Calendar.current.date(from: components)
-        }() else { return }
-        
-        guard let yesterday = {
-            var components = Calendar.current.dateComponents([.day, .month, .year], from: Date() - dayInSeconds)
-            components.hour = 0
-            components.minute = 0
-            components.second = 0
-            return Calendar.current.date(from: components)
-        }() else { return }
-        
-        guard let sevenDaysAgo = {
-            var components = Calendar.current.dateComponents([.day, .month, .year], from: Date() - (dayInSeconds * 7))
-            components.hour = 0
-            components.minute = 0
-            components.second = 0
-            return Calendar.current.date(from: components)
-        }() else { return }
-        
-        guard let thirtyDaysAgo = {
-            var components = Calendar.current.dateComponents([.day, .month, .year], from: Date() - (dayInSeconds * 30))
-            components.hour = 0
-            components.minute = 0
-            components.second = 0
-            return Calendar.current.date(from: components)
-        }() else { return }
-        
         let sectionsDict = notes
             .map { note in
                 switch note.date {
-                case let date where date > today:
+                case let date where date > .today:
                     return ("Today", [note])
-                case let date where date > yesterday:
+                case let date where date > .yesterday:
                     return ("Yesterday", [note])
-                case let date where date > sevenDaysAgo:
+                case let date where date > .sevenDaysAgo:
                     return ("Previous 7 Days", [note])
-                case let date where date > thirtyDaysAgo:
+                case let date where date > .thirtyDaysAgo:
                     return ("Previous 30 Days", [note])
-                case let date where date < currentYear:
+                case let date where date < .currentYear:
                     let year = Calendar.current.dateComponents([.year], from: note.date).year
                     return ("\(year ?? 0)", [note])
                 default:

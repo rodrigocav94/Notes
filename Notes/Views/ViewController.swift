@@ -39,9 +39,11 @@ class ViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Note", for: indexPath)
-        let note = vm.sections[indexPath.section].notes[indexPath.row]
-        cell.textLabel?.text = note.firstLine
-        cell.detailTextLabel?.text = note.descriptionLine
+        if vm.sections.indices.contains(indexPath.section), vm.sections[indexPath.section].notes.indices.contains(indexPath.row) {
+            let note = vm.sections[indexPath.section].notes[indexPath.row]
+            cell.textLabel?.text = note.firstLine
+            cell.detailTextLabel?.text = note.descriptionLine
+        }
         return cell
     }
     
@@ -88,6 +90,7 @@ class ViewController: UITableViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        vm.refreshSections()
         tableView.reloadData()
         if let notesCountLabel = notesCountBarButton?.customView as? UILabel {
             notesCountLabel.text = "\(vm.notes.count) notes"

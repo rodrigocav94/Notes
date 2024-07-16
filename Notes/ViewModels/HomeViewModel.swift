@@ -9,7 +9,7 @@ import Foundation
 
 class HomeViewModel {
     var toolbarState = ToolbarState.normal
-    var selection: Set<Note> = []
+    var selectedNotes: Set<Note> = []
     var sortingOption: SortingOption = {
         let defaults = UserDefaults.standard
         let decoder = JSONDecoder()

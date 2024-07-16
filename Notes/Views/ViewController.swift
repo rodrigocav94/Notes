@@ -79,10 +79,28 @@ class ViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let noteEditionView = NoteController()
-        noteEditionView.vm = vm
-        noteEditionView.noteIndex = indexPath
-        navigationController?.pushViewController(noteEditionView, animated: true)
+        if vm.toolbarState == .normal {
+            let noteEditionView = NoteController()
+            noteEditionView.vm = vm
+            noteEditionView.noteIndex = indexPath
+            navigationController?.pushViewController(noteEditionView, animated: true)
+        } else {
+            let selectedNote = vm.filteredSections[indexPath.section].notes[indexPath.row]
+            vm.selectedNotes.insert(selectedNote)
+            if vm.toolbarState != .someSelected {
+                vm.toolbarState = .someSelected
+                setupToolbar()
+            }
+        }
+    }
+    
+    override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        let selectedNote = vm.filteredSections[indexPath.section].notes[indexPath.row]
+        vm.selectedNotes.remove(selectedNote)
+        if vm.selectedNotes.isEmpty {
+            vm.toolbarState = .noSelection
+            setupToolbar()
+        }
     }
     
     func setupNavBar() {
@@ -110,6 +128,7 @@ class ViewController: UITableViewController {
     
     func onDoneEditingTapped(_ action: UIAction? = nil) {
         tableView.setEditing(false, animated: true)
+        vm.selectedNotes = []
         vm.toolbarState = .normal
         setupToolbar()
         setupNavBar()
@@ -202,7 +221,19 @@ class ViewController: UITableViewController {
     }
     
     @objc func deleteSelected() {
-        
+        let ac = UIAlertController(title: "Remove Selected Notes?", message: "This action cannot be undone", preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "Remove Notes", style: .destructive, handler: { [weak self] _ in
+            guard let self else { return }
+            vm.notes.removeAll {
+                self.vm.selectedNotes.contains($0)
+            }
+            vm.filterNotes(refreshingSections: true) { [weak self] in
+                self?.tableView.reloadData()
+            }
+            onDoneEditingTapped()
+        }))
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(ac, animated: true)
     }
     
     func onNewNoteTapped(_ action: UIAction) {

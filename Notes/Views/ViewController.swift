@@ -50,6 +50,33 @@ class ViewController: UITableViewController {
         return cell
     }
     
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let contextItem = UIContextualAction(style: .destructive, title: "Delete") {  [weak self] (contextualAction, view, boolValue) in
+            guard let self else { return }
+            
+            guard let noteIndex = vm.notes.firstIndex(where: {
+                $0.id == self.vm.sections[indexPath.section].notes[indexPath.row].id
+            }) else { return }
+            
+            let willEmptyOutSection: Bool = vm.sections[indexPath.section].notes.count == 1
+            vm.notes.remove(at: noteIndex)
+            
+            vm.filterNotes(refreshingSections: true) {
+                if willEmptyOutSection {
+                    tableView.deleteSections(IndexSet(integer: indexPath.section), with: .automatic)
+                } else {
+                    tableView.deleteRows(at: [indexPath], with: .automatic)
+                }
+            }
+        }
+        
+        contextItem.image = UIImage(systemName: "trash")
+        let swipeActions = UISwipeActionsConfiguration(actions: [contextItem])
+        
+        return swipeActions
+    }
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let noteEditionView = NoteController()
         noteEditionView.vm = vm

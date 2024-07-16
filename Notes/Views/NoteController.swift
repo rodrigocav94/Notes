@@ -58,7 +58,7 @@ class NoteController: UIViewController {
     func setupNavBar() {
         navigationItem.largeTitleDisplayMode = .never
 
-        let deleteAction = UIAction(title: "Erase", image: UIImage(systemName: "trash"), attributes: .destructive, handler: onDeleteTapped)
+        let deleteAction = UIAction(title: "Remove", image: UIImage(systemName: "trash"), attributes: .destructive, handler: onDeleteTapped)
         let newEntryAction = UIAction(title: "New Entry", image: UIImage(systemName: "square.and.pencil"), handler: onNewEntryTapped)
         let menu = UIMenu(children: [newEntryAction, deleteAction])
         
@@ -69,11 +69,11 @@ class NoteController: UIViewController {
     
     func onDeleteTapped(_ action: UIAction) {
         let ac = UIAlertController(
-            title: "Delete note?",
+            title: "Remove note?",
             message: "This action cannot be undone",
             preferredStyle: .alert
         )
-        ac.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+        ac.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { [weak self] _ in
             self?.navigationController?.popToRootViewController(animated: true)
             self?.textView?.text = ""
         }))

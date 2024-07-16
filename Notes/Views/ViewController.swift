@@ -18,6 +18,7 @@ class ViewController: UITableViewController {
         setupNavBar()
         setupToolbar()
         setSearchBarUI()
+        tableView.allowsMultipleSelectionDuringEditing = true
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -52,7 +53,7 @@ class ViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
-        let contextItem = UIContextualAction(style: .destructive, title: "Delete") {  [weak self] (contextualAction, view, boolValue) in
+        let contextItem = UIContextualAction(style: .destructive, title: "Remove") {  [weak self] (contextualAction, view, boolValue) in
             guard let self else { return }
             
             guard let noteIndex = vm.notes.firstIndex(where: {
@@ -88,22 +89,37 @@ class ViewController: UITableViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         title = "Notes"
         
-        let dateEditedAction = UIAction(title: "Default (Date Edited)", handler: onDateOrderTapped)
-        let titleAction = UIAction(title: "Title", handler: onTitleOrderTapped)
-        
-        sortMenu = UIMenu(title: "Sort by", subtitle: vm.sortingOption.description, image: UIImage(systemName: "arrow.up.arrow.down"), options: .singleSelection, children: [dateEditedAction, titleAction])
-        updateSortingOption()
-        
-        let selectAction = UIAction(title: "Select Notes", image: UIImage(systemName: "checkmark.circle"), handler: onSelectTapped)
-        let menu = UIMenu(children: [selectAction, sortMenu])
-        
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
-        
-        updateSortingOption()
+        if vm.toolbarState == .normal {
+            let dateEditedAction = UIAction(title: "Default (Date Edited)", handler: onDateOrderTapped)
+            let titleAction = UIAction(title: "Title", handler: onTitleOrderTapped)
+            
+            sortMenu = UIMenu(title: "Sort by", subtitle: vm.sortingOption.description, image: UIImage(systemName: "arrow.up.arrow.down"), options: .singleSelection, children: [dateEditedAction, titleAction])
+            updateSortingOption()
+            
+            let selectAction = UIAction(title: "Select Notes", image: UIImage(systemName: "checkmark.circle"), handler: onSelectTapped)
+            let menu = UIMenu(children: [selectAction, sortMenu])
+            
+            navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
+            
+            updateSortingOption()
+        } else {
+            let doneAction = UIAction(handler: onDoneEditingTapped)
+            navigationItem.rightBarButtonItem = UIBarButtonItem(systemItem: .done, primaryAction: doneAction)
+        }
+    }
+    
+    func onDoneEditingTapped(_ action: UIAction? = nil) {
+        tableView.setEditing(false, animated: true)
+        vm.toolbarState = .normal
+        setupToolbar()
+        setupNavBar()
     }
     
     func onSelectTapped(_ action: UIAction) {
-
+        tableView.setEditing(true, animated: true)
+        vm.toolbarState = .noSelection
+        setupToolbar()
+        setupNavBar()
     }
     
     func onDateOrderTapped(_ action: UIAction) {
@@ -137,21 +153,56 @@ class ViewController: UITableViewController {
     }
     
     func setupToolbar() {
-        let notesCountLabel = UILabel()
-        notesCountLabel.text = "\(vm.notes.count) notes"
-        notesCountLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
-        notesCountLabel.textColor = .secondaryLabel
+        switch vm.toolbarState {
+        case .normal:
+            let notesCountLabel = UILabel()
+            notesCountLabel.text = "\(vm.notes.count) notes"
+            notesCountLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+            notesCountLabel.textColor = .secondaryLabel
+            
+            let notesCountBarButton = UIBarButtonItem(customView: notesCountLabel)
+            self.notesCountBarButton = notesCountBarButton
+            
+            toolbarItems = [
+                UIBarButtonItem(systemItem: .flexibleSpace),
+                notesCountBarButton,
+                UIBarButtonItem(systemItem: .flexibleSpace),
+                UIBarButtonItem(systemItem: .compose, primaryAction: UIAction(handler: onNewNoteTapped)),
+            ]
+            
+            navigationController?.setToolbarHidden(false, animated: false)
+        case .noSelection:
+            let deleteAllButton = UIBarButtonItem(title: "Remove All", style: .plain, target: self, action: #selector(deleteAll))
+            deleteAllButton.isEnabled = !vm.notes.isEmpty
+            
+            toolbarItems = [
+                UIBarButtonItem(systemItem: .flexibleSpace),
+                deleteAllButton
+            ]
+        case .someSelected:
+            toolbarItems = [
+                UIBarButtonItem(systemItem: .flexibleSpace),
+                UIBarButtonItem(title: "Remove", style: .plain, target: self, action: #selector(deleteSelected))
+            ]
+        }
+    }
+    
+    @objc func deleteAll() {
+        let ac = UIAlertController(title: "Remove All Notes?", message: "This action cannot be undone", preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "Remove All", style: .destructive, handler: { [weak self] _ in
+            guard let self else { return }
+            vm.notes = []
+            vm.filterNotes(refreshingSections: true) { [weak self] in
+                self?.tableView.reloadData()
+            }
+            onDoneEditingTapped()
+        }))
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(ac, animated: true)
+    }
+    
+    @objc func deleteSelected() {
         
-        let notesCountBarButton = UIBarButtonItem(customView: notesCountLabel)
-        self.notesCountBarButton = notesCountBarButton
-        
-        toolbarItems = [
-            UIBarButtonItem(systemItem: .flexibleSpace),
-            notesCountBarButton,
-            UIBarButtonItem(systemItem: .flexibleSpace),
-            UIBarButtonItem(systemItem: .compose, primaryAction: UIAction(handler: onNewNoteTapped)),
-        ]
-        navigationController?.setToolbarHidden(false, animated: false)
     }
     
     func onNewNoteTapped(_ action: UIAction) {
